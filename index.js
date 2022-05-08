@@ -14,13 +14,36 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DBUSER}:${process.env.PASSWORD}@cluster0.eeaha.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-client.connect(err => {
-  const collection = client.db("items").collection("item");
-  console.log('database connecteed sucessfully');
-  // perform actions on the collection object
+// client.connect(err => {
+//   const collection = client.db("items").collection("item");
+//   console.log('database connecteed sucessfully');
+//   // perform actions on the collection object
   
-  client.close();
-});
+//   client.close();
+// });
+
+
+async function run(){
+    try{
+      await client.connect();
+      const productcollection = client.db("items").collection("item");
+
+      //Featching data
+
+      app.get("/products", async (req, res) => {
+        const query = {};
+        const cursor = productcollection.find(query);
+        const products = await cursor.toArray();
+        res.send(products);
+      });
+
+    }
+    finally{
+
+    }
+  }
+  run().catch(console.dir);
+
 
 
 
