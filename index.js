@@ -4,6 +4,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = 8000;
 const app = express();
+const jwt = require("jsonwebtoken");
+
 
 require("dotenv").config();
 
@@ -12,7 +14,10 @@ app.use(cors());
 app.use(express.json());
 
 
+
 const uri = `mongodb+srv://${process.env.DBUSER}:${process.env.PASSWORD}@cluster0.eeaha.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+
+
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 // client.connect(err => {
 //   const collection = client.db("items").collection("item");
@@ -22,6 +27,28 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 //   client.close();
 // });
 
+
+function verifyJWT(req, res, next) {
+  const authHeader = req.headers.authorization;
+ 
+ 
+  if (!authHeader) {
+    return res.status(401).send({ message: "Unauthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+  
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).send({message :"Forbidden Access"});
+    }
+
+    req.decoded = decoded;
+    next();
+  });
+
+}
+
+
 app.get("/", (req, res) => {
   res.send("Server is running succesfully. Now connect mongodb to your server")
 })
@@ -30,6 +57,17 @@ async function run() {
     await client.connect();
     const productcollection = client.db("items").collection("item");
 
+
+    // getting user with access token jwt
+
+    app.post("/login", async (req, res) => {
+      const user = req.body;
+      const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1d",
+      });
+      res.send({ accessToken });
+    });
+    
     //Featching data
 
     app.get("/products", async (req, res) => {
@@ -59,14 +97,33 @@ async function run() {
 
     // myitem
 
-    app.get("/myitem", async (req, res) => {
+    app.get("/myitem",verifyJWT ,async (req, res) => {
       
-      const email = req.query.email;
-      const query = {email : email};
-      const cursor = productcollection.find(query);
-      const orders = await cursor.toArray();
-      res.send(orders);
+      // const email = req.query.email;
+      // const query = {email : email};
+      // const cursor = productcollection.find(query);
+      // const orders = await cursor.toArray();
+      // res.send(orders);
+
+      const decodedemail = req.decoded.email;
+         console.log(decodedemail);
+         
+
+        const email = req.query.email;
+        console.log(email)
+        const query = { email: email };
+        if (email === decodedemail) {
+          const cursor = productcollection.find(query);
+          const orders = await cursor.toArray();
+          res.send(orders);
+        } else {
+          res.status(403).send({ message: "Forbidden" });
+        }
+
+
     })
+
+
 
 
     // reduce a single value
