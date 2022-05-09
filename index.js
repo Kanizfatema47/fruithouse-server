@@ -50,7 +50,7 @@ function verifyJWT(req, res, next) {
 
 
 app.get("/", (req, res) => {
-  res.send("Server is running succesfully. Now connect mongodb to your server")
+  res.send("Server is running succesfully.")
 })
 async function run() {
   try {
