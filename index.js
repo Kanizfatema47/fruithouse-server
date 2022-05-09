@@ -68,7 +68,7 @@ async function run() {
       res.send(orders);
     })
 
-    
+
     // reduce a single value
 
     app.put("/reduce/:id", async (req, res) => {
@@ -90,6 +90,31 @@ async function run() {
       console.log(result);
       res.send(result);
     });
+
+
+// incresing quantity by one
+
+      app.put("/increase/:id", async (req, res) => {
+        const id = req.params.id;
+        const increasedquantity = req.body;
+        const newquantity = increasedquantity.quantity;
+        const filter = { _id: ObjectId(id) };
+        const options = { upsert: true };
+        const updatedDoc = {
+          $set: {
+            quantity: newquantity,
+          },
+        };
+        const result = await productcollection.updateOne(
+          filter,
+          updatedDoc,
+          options
+        );
+        console.log(result);
+        res.send(result);
+      });
+
+
 
   }
   finally {
