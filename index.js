@@ -67,7 +67,7 @@ async function run() {
       });
       res.send({ accessToken });
     });
-    
+
     //Featching data
 
     app.get("/products", async (req, res) => {
@@ -170,6 +170,16 @@ async function run() {
         console.log(result);
         res.send(result);
       });
+
+      // delete a data
+
+      app.delete("/product/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = productcollection.deleteOne(query);
+        res.send(result);
+      });
+
 
 
 
